@@ -1,0 +1,62 @@
+# Render Blueprint — one-click deploy for tech360-bd/idurar-erp-crm
+# Docs: https://render.com/docs/blueprint-spec
+# Click "New > Blueprint" on https://dashboard.render.com and select this repo.
+# Render will read this file and provision both services with the env vars below.
+#
+# You will need to:
+#   1. Create a MongoDB Atlas free-tier cluster (M0) and put its connection
+#      string in the DATABASE env var when prompted.
+#   2. Replace the placeholder JWT_SECRET (Render auto-generates one if you
+#      click "Generate" in the dashboard).
+
+services:
+  - type: web
+    name: idurar-backend
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm ci --no-audit --no-fund
+    startCommand: npm run start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE
+        sync: false  # set in dashboard: mongodb+srv://...
+      - key: JWT_SECRET
+        sync: false  # set in dashboard (use Render's "Generate" button)
+      - key: CLIENT_URL
+        fromService:
+          type: web
+          name: idurar-frontend
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: PUBLIC_SERVER_FILE
+        fromService:
+          type: web
+          name: idurar-backend
+          envVarKey: RENDER_EXTERNAL_URL
+
+  - type: web
+    name: idurar-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci --no-audit --no-fund && npm run build
+    staticPublishPath: ./dist
+    pullRequestPreviewsEnabled: false
+    autoDeploy: true
+    envVars:
+      - key: VITE_BACKEND_SERVER
+        fromService:
+          type: web
+          name: idurar-backend
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: VITE_FILE_BASE_URL
+        fromService:
+          type: web
+          name: idurar-backend
+          envVarKey: RENDER_EXTERNAL_URL
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

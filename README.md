@@ -18,7 +18,16 @@ IDURAR is Open Source ERP / CRM (Invoice / Quote / Accounting ) Based on Advance
 
 **🚀 Self-hosted Entreprise Version** : [https://cloud.idurarapp.com](https://cloud.idurarapp.com)
 
+### One-click deploy on Render
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/tech360-bd/idurar-erp-crm)
+
+This repository includes a `render.yaml` Blueprint that provisions:
+- A **Node.js web service** for the backend (`backend/`) — free tier
+- A **static site** for the frontend (`frontend/`) — free tier
+- All cross-service env vars (`CLIENT_URL`, `VITE_BACKEND_SERVER`) wired automatically
+
+You'll need to provide a **MongoDB connection string** (Atlas free tier M0 works) and a **JWT secret** in the Render dashboard when prompted.
 
 ## Features :
 
