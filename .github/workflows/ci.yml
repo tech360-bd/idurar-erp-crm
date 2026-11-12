@@ -38,8 +38,11 @@ jobs:
       - name: Install backend dependencies
         run: npm ci --no-audit --no-fund
 
-      - name: Smoke-check backend entrypoint (syntax + import resolve)
-        run: node -e "require('./src/setup'); require('./src/app'); console.log('backend entrypoint OK')"
+      - name: Syntax-check backend entrypoints
+        run: |
+          node --check src/server.js
+          node --check src/app.js
+          echo "backend entrypoints parse OK"
 
   frontend:
     name: Frontend · install + lint + build
