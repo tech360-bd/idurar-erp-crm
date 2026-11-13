@@ -1,0 +1,92 @@
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# docker-compose.yml — local dev environment for idurar-erp-crm
+#
+# Services:
+#   mongo     — MongoDB 7 standalone (persistent volume for data)
+#   backend   — Express API on :8888, hot-reload via nodemon
+#   frontend  — Vite dev server on :3000, proxies API calls to backend
+#
+# Usage:
+#   docker compose up                  # start all services (foreground)
+#   docker compose up -d               # start in background
+#   docker compose logs -f backend     # tail backend logs
+#   docker compose down                # stop + remove containers
+#   docker compose down -v             # also delete the mongo data volume
+#
+# First run installs npm deps for both backend and frontend (~2-3 min).
+# After that, restarts are fast (volumes + caches warm).
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+services:
+  # ─── MongoDB ───────────────────────────────────────────────────────
+  mongo:
+    image: mongo:7-bookworm
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ─── Backend (Express + Mongoose) ──────────────────────────────────
+  backend:
+    image: node:20-bookworm-slim
+    working_dir: /app
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - "8888:8888"
+    environment:
+      NODE_ENV: development
+      DATABASE: mongodb://mongo:27017/idurar
+      JWT_SECRET: dev-only-jwt-secret-replace-in-prod-9f3b
+      CLIENT_URL: http://localhost:3000
+      PUBLIC_SERVER_FILE: http://localhost:8888/
+    # Install deps on first run, then start nodemon. The `npm install` is
+    # idempotent — runs every time but is a no-op when node_modules is current.
+    command: sh -c "npm install --no-audit --no-fund && npx nodemon src/server.js --ignore public/"
+    volumes:
+      # Hot-reload: mount local source over the working dir
+      - ./backend:/app
+      # Persist node_modules in a named volume so it survives `down`
+      - backend-node-modules:/app/node_modules
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8888/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ─── Frontend (Vite dev server) ────────────────────────────────────
+  frontend:
+    image: node:20-bookworm-slim
+    working_dir: /app
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      VITE_BACKEND_SERVER: http://localhost:8888
+      VITE_FILE_BASE_URL: http://localhost:8888/
+    # Vite dev server binds to 0.0.0.0 so the host can reach it via localhost:3000
+    command: sh -c "npm install --no-audit --no-fund && npm run dev -- --host 0.0.0.0"
+    volumes:
+      - ./frontend:/app
+      - frontend-node-modules:/app/node_modules
+
+volumes:
+  mongo-data:
+    driver: local
+  backend-node-modules:
+    driver: local
+  frontend-node-modules:
+    driver: local

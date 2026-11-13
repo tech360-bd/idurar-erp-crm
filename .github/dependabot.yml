@@ -1,0 +1,67 @@
+# Dependabot config — keeps both backend and frontend dependencies fresh,
+# and bumps GitHub Actions versions used in CI.
+# Docs: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+
+updates:
+  # Backend npm dependencies — weekly check, batched into one PR per week
+  # to avoid PR spam. Grouped by minor/patch; major bumps get individual PRs.
+  - package-ecosystem: npm
+    directory: /backend
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:00"
+      timezone: UTC
+    open-pull-requests-limit: 5
+    versioning-strategy: increase
+    commit-message:
+      prefix: "chore(deps)(backend)"
+      include: scope
+    groups:
+      backend-minor-patch:
+        update-types:
+          - minor
+          - patch
+    labels:
+      - "dependencies"
+      - "backend"
+
+  # Frontend npm dependencies — same cadence.
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:00"
+      timezone: UTC
+    open-pull-requests-limit: 5
+    versioning-strategy: increase
+    commit-message:
+      prefix: "chore(deps)(frontend)"
+      include: scope
+    groups:
+      frontend-minor-patch:
+        update-types:
+          - minor
+          - patch
+    labels:
+      - "dependencies"
+      - "frontend"
+
+  # GitHub Actions used in .github/workflows/*.yml
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "04:00"
+      timezone: UTC
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "chore(deps)(ci)"
+      include: scope
+    labels:
+      - "dependencies"
+      - "ci"

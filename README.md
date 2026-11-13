@@ -29,6 +29,31 @@ This repository includes a `render.yaml` Blueprint that provisions:
 
 You'll need to provide a **MongoDB connection string** (Atlas free tier M0 works) and a **JWT secret** in the Render dashboard when prompted.
 
+### Run locally with Docker Compose
+
+```bash
+docker compose up
+```
+
+This provisions:
+- **mongo** — MongoDB 7 on `localhost:27017` (data persisted in a named volume)
+- **backend** — Express API on `http://localhost:8888` (hot-reload via nodemon)
+- **frontend** — Vite dev server on `http://localhost:3000` (hot-reload via HMR)
+
+First run installs npm deps inside the containers (~2-3 min); subsequent restarts are fast. Stop with `Ctrl+C` (foreground) or `docker compose down` (background). Wipe the database volume with `docker compose down -v`.
+
+### Build a production image
+
+```bash
+docker build -t idurar-erp-crm .
+docker run -p 8888:8888 \
+  -e DATABASE="mongodb://host:27017/idurar" \
+  -e JWT_SECRET="$(openssl rand -hex 32)" \
+  idurar-erp-crm
+```
+
+The multi-stage `Dockerfile` builds the frontend with Vite and copies the resulting `dist/` into the backend's `public/` directory, so a single container serves both the API and the SPA on port 8888.
+
 ## Features :
 
 Invoice Management
