@@ -1,0 +1,57 @@
+# .dockerignore — files NOT copied into the Docker build context.
+# Keeps builds fast and images lean. Anything not needed at runtime
+# or for the build should be listed here.
+
+# VCS
+.git
+.gitignore
+.gitattributes
+
+# CI / docs / metadata not needed by the runtime image
+.github
+doc
+features
+*.md
+!README.md
+!INSTALLATION-INSTRUCTIONS.md
+!LICENSE
+CODE-OF-CONDUCT.md
+CONTRIBUTING.md
+MAINTAINERS.md
+SECURITY.md
+llms.txt
+idurar-crm-erp.svg
+image.png
+
+# Editor / OS cruft
+.DS_Store
+.vscode
+.idea
+*.swp
+*.swo
+
+# Local env files (use --env-file at runtime instead)
+.env
+.env.local
+.env.*.local
+backend/.env
+frontend/.env
+frontend/temp.env
+
+# Build artifacts (rebuilt inside the image)
+backend/node_modules
+frontend/node_modules
+backend/dist
+frontend/dist
+backend/build
+frontend/build
+
+# Render blueprint + docker-compose (deployment descriptors, not runtime)
+render.yaml
+docker-compose.yml
+
+# Logs + coverage
+*.log
+npm-debug.log*
+coverage
+.cache
