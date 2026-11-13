@@ -9,6 +9,7 @@ const coreAuthRouter = require('./routes/coreRoutes/coreAuth');
 const coreApiRouter = require('./routes/coreRoutes/coreApi');
 const coreDownloadRouter = require('./routes/coreRoutes/coreDownloadRouter');
 const corePublicRouter = require('./routes/coreRoutes/corePublicRouter');
+const healthRouter = require('./routes/coreRoutes/healthRoute');
 const adminAuth = require('./controllers/coreControllers/adminAuth');
 
 const errorHandlers = require('./handlers/errorHandlers');
@@ -35,6 +36,11 @@ app.use(compression());
 // app.use(fileUpload());
 
 // Here our API Routes
+
+// Public health endpoint — mounted FIRST and without auth so liveness
+// probes (Docker HEALTHCHECK, docker-compose healthcheck, Render
+// healthCheckPath, uptime monitors) always get a fast 200.
+app.use('/api', healthRouter);
 
 app.use('/api', coreAuthRouter);
 app.use('/api', adminAuth.isValidAuthToken, coreApiRouter);

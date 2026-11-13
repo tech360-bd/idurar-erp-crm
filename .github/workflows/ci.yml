@@ -42,7 +42,36 @@ jobs:
         run: |
           node --check src/server.js
           node --check src/app.js
+          node --check src/routes/coreRoutes/healthRoute.js
           echo "backend entrypoints parse OK"
+
+      - name: Smoke-test /api/health endpoint (no DB needed)
+        run: |
+          node -e "
+            require('module-alias/register');
+            // Load all mongoose models first (server.js does this via globSync;
+            // app.js's routes reference models by name and will throw if they
+            // aren't registered yet).
+            const { globSync } = require('glob');
+            const path = require('path');
+            for (const f of globSync('./src/models/**/*.js')) {
+              require(path.resolve(f));
+            }
+            const app = require('./src/app');
+            const server = app.listen(0, () => {
+              const port = server.address().port;
+              fetch('http://127.0.0.1:' + port + '/api/health')
+                .then(async res => {
+                  if (res.status !== 200) { console.error('FAIL: status', res.status); server.close(); process.exit(1); }
+                  const body = await res.json();
+                  if (!body.success || body.result?.status !== 'ok' || body.result?.application !== 'idurar-erp-crm') {
+                    console.error('FAIL: body', body); server.close(); process.exit(1); }
+                  console.log('PASS: /api/health →', JSON.stringify(body));
+                  server.close(); process.exit(0);
+                })
+                .catch(e => { console.error('FAIL:', e.message); server.close(); process.exit(1); });
+            });
+          "
 
   frontend:
     name: Frontend · install + lint + build
