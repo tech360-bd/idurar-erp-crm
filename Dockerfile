@@ -69,7 +69,7 @@ EXPOSE 8888
 # Bind to all interfaces so the container is reachable from the host
 # when published with -p 8888:8888.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-  CMD curl -fsS "http://127.0.0.1:${PORT:-8888}/" || exit 1
+  CMD curl -fsS "http://127.0.0.1:${PORT:-8888}/api/health" || exit 1
 
 # Use tini as PID 1 to reap zombies and forward signals
 ENTRYPOINT ["/usr/bin/tini", "--"]

@@ -58,7 +58,7 @@ services:
       # Persist node_modules in a named volume so it survives `down`
       - backend-node-modules:/app/node_modules
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8888/ || exit 1"]
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8888/api/health || exit 1"]
       interval: 15s
       timeout: 5s
       retries: 5

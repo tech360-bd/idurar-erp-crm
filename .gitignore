@@ -44,3 +44,4 @@ coverage/
 *.tar.gz
 *.tgz
 .cache/
+backend/node_modules/

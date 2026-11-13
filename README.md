@@ -29,6 +29,23 @@ This repository includes a `render.yaml` Blueprint that provisions:
 
 You'll need to provide a **MongoDB connection string** (Atlas free tier M0 works) and a **JWT secret** in the Render dashboard when prompted.
 
+### Health check
+
+Once the backend is running (locally or deployed), probe its liveness endpoint:
+
+```bash
+curl http://localhost:8888/api/health
+# → { "success": true, "result": { "status": "ok", "application": "idurar-erp-crm", ... } }
+```
+
+This endpoint is **public** (no auth required) and is used by:
+- `Dockerfile` `HEALTHCHECK`
+- `docker-compose.yml` healthcheck blocks
+- `render.yaml` `healthCheckPath`
+- External uptime monitors
+
+It always returns 200 quickly (liveness), even if MongoDB is down. The `result.db` field reports the current Mongoose connection state so orchestrators can also use it for readiness checks.
+
 ### Run locally with Docker Compose
 
 ```bash
